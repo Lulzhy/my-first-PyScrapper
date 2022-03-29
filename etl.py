@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup as bs
 import sys
 import pymongo
 from codetiming import Timer
+import datetime
 
 
 """ 
@@ -31,7 +32,7 @@ def extract_elements(soup, selector):
     elements_soup = soup.select(selector)
     elements = []
     for element in elements_soup:
-        elements.append({"Title": element.text.strip(), "href": element["href"]})
+        elements.append({"Title": element.text.strip(), "URL": element["href"], "Date": datetime.datetime.utcnow()})
     return elements
 
 """
@@ -51,8 +52,9 @@ def mongo_connect():
         dbnames = client.list_database_names()
 
         if "mypyscrapper" not in dbnames:
-            """ Create the database and the collection with a unique index on blog post link """
-            mypyscrapper.blog_posts.create_index([("href", pymongo.ASCENDING)], unique=True)
+            """ Create the database and the collection with a unique index on blog post link and a text index on title (text base search) """
+            mypyscrapper.blog_posts.create_index([("URL", pymongo.ASCENDING)], unique=True)
+            mypyscrapper.blog_posts.create_index([("Title", pymongo.TEXT)])
     except pymongo.errors.PyMongoError as err:
         sys.exit(err)
     return blog_posts
@@ -77,7 +79,7 @@ def etl():
     response = send_request(target_url)
 
     """ Create a BeautifulSoup object to parse HTML response """
-    html_soup = bs(response.content, "html.parser")
+    html_soup = bs(response.content, "lxml")
 
     """ 
         Define CSS selector to get titles of blog post then extract them from html soup

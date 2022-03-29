@@ -1,4 +1,5 @@
 .env/*
 .vscode/*
 mongod.lock
+test.py
 timer.txt

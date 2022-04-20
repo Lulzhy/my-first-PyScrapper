@@ -10,14 +10,11 @@ Dans le dernier exercice on procéde à la réalisation d'un ETL *(Extract, Tran
 Effectivement je lis chaque jour des articles sur l'informatique, et bien souvent j'ai besoin d'y revenir ultérieurement afin de retrouver une information. Je suis parti de ce constat comme base de ce projet relativement simple ; pour des usages plus avancés il convient effectivement de l'adapter et/ou d'utiliser des framework comme [Scrapy](https://scrapy.org/). Il s'agit surtout d'une base d'entrainement afin de reprendre le Python que j'avais délaissé depuis mes études *(en version 2.7 !)*.
 
 # Les grandes lignes du programme etl.py
-1. Récupérer l'accueil du blog de Manuel Dorne, alias [Korben](https://korben.info/) au format HTML brut
-2. Parser grâce à [BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/) ce html afin de pouvoir en extraire des morceaux
-3. Extraire les titres des articles de blog afin d'en obtenir le texte et l'URL
-4. Sauvegarder les données dans une base MongoDB
+Le programme fonctionne avec des processus ce qui permet de paralléliser le traitement de chaque site qui m'intéresse.
+J'envisageais au début l'utilisation de thread puis en me renseignant plus en détail et en effectuant des tests je me suis rendu compte que **dans ce cas précis** les processus sont plus efficaces.
+Chaque site a sa propre fonction comme les sélections dans le document HTML diffèrent, mais j'ai essayé de mettre en commun le plus d'éléments possible. Globalement chaque site est ainsi traité :
+1. Requête pour récupérer l'accueil
+2. Formater la réponse avec BeautifulSoup afin de profiter de l'API pour sélectionner facilement du contenu
+3. Persister les données dans MongoDB
 
-Ici un seul site est traité mais il est assez facile d'adapter `etl.py` afin de fournir une liste d'URL à extraire et de sélecteurs CSS pour compléter la base.
-
-Je fais tourner ce programme automatiquement chaque jour sur un serveur Linux avec [cron](https://doc.ubuntu-fr.org/cron). Je n'ai pas besoin de contrôler qu'un article soit déjà présent en base grâce à l'utilisation d'un index unique sur l'URL ; MongoDB retourne une erreur en cas de doublon et le programme se fini. Comme il n'y a pas de gestion de transaction, seuls les nouveaux articles sont ajoutés. Enfin le fonctionnement de ce programme suppose que Korben ne publie pas une dizaine d'articles par jour :wink: en effet seul les articles de la **première page** sont extraits.
-
-# A venir
-Je vais essayer de mettre en place l'utilisation de threads afin de paralléliser certaines fonctions qui n'ont pas besoin d'être synchrones. Une fois le programme à mon goût, ajout du requirements.txt et de derniers détails dans le README.
+Seul l'accueil est récupéré car j'envisage de faire fonctionner ce programme chaque jour avec [cron](https://doc.ubuntu-fr.org/cron) sur l'une de mes machines Linux ; ainsi je suis à peu près sûr de ne rater aucun article (ou il faudrait en avoir publié un paquet) :wink:
